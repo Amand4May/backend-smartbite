@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from smartbite.models import Pet, Feeder, FeedingRecord, FeedingSchedule, Alert
+from smartbite.application.nutrition import calculate_pet_portion
 
 User = get_user_model()
 
@@ -47,27 +48,22 @@ class PetSerializer(serializers.ModelSerializer):
         fields = (
             "id", "name", "species", "breed", "weight", "age",
             "activity_level", "feeding_goal", "avatar_emoji",
+            "is_neutered", "body_condition", "breed_factor",
             "daily_recommended_grams", "created_at", "updated_at",
         )
         read_only_fields = ("id", "created_at", "updated_at")
-
-    def _calculate_daily_recommendation(self, pet: Pet) -> int:
-        base = float(pet.weight) * (15 if pet.species == "dog" else 20)
-        activity_multiplier = {"high": 1.3, "moderate": 1.1, "low": 0.9}.get(pet.activity_level, 1)
-        goal_multiplier = {"weight_loss": 0.85, "maintenance": 1.0, "weight_gain": 1.15}.get(pet.feeding_goal, 1)
-        return round(base * activity_multiplier * goal_multiplier)
 
     def create(self, validated_data):
         if not validated_data.get("avatar_emoji"):
             validated_data["avatar_emoji"] = "🐕" if validated_data.get("species") == "dog" else "🐱"
         pet = super().create(validated_data)
-        pet.daily_recommended_grams = self._calculate_daily_recommendation(pet)
+        pet.daily_recommended_grams = calculate_pet_portion(pet)
         pet.save(update_fields=["daily_recommended_grams"])
         return pet
 
     def update(self, instance, validated_data):
         pet = super().update(instance, validated_data)
-        pet.daily_recommended_grams = self._calculate_daily_recommendation(pet)
+        pet.daily_recommended_grams = calculate_pet_portion(pet)
         pet.save(update_fields=["daily_recommended_grams"])
         return pet
 

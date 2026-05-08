@@ -13,6 +13,12 @@ class Pet(BaseModelMixin):
         ("moderate", "Moderado"),
         ("high", "Alto"),
     ]
+    BODY_CONDITION_CHOICES = [
+        ("underweight", "Abaixo do peso"),
+        ("ideal", "Peso ideal"),
+        ("overweight", "Sobrepeso"),
+        ("obese", "Obeso"),
+    ]
     GOAL_CHOICES = [
         ("weight_loss", "Perda de peso"),
         ("maintenance", "Manutenção"),
@@ -32,6 +38,9 @@ class Pet(BaseModelMixin):
     age = models.PositiveSmallIntegerField(verbose_name="Idade (meses)")
     activity_level = models.CharField(max_length=10, choices=ACTIVITY_CHOICES, default="moderate", verbose_name="Nível de atividade")
     feeding_goal = models.CharField(max_length=15, choices=GOAL_CHOICES, default="maintenance", verbose_name="Objetivo alimentar")
+    is_neutered = models.BooleanField(default=False, verbose_name="Castrado/Esterilizado")
+    body_condition = models.CharField(max_length=15, choices=BODY_CONDITION_CHOICES, default="ideal", verbose_name="Condição corporal")
+    breed_factor = models.DecimalField(max_digits=3, decimal_places=2, default=1.0, verbose_name="Fator de raça")
     avatar_emoji = models.CharField(max_length=10, default="🐾", verbose_name="Emoji")
     daily_recommended_grams = models.PositiveIntegerField(default=0, verbose_name="Recomendação diária (g)")
 
